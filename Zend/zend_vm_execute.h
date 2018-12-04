@@ -3631,24 +3631,16 @@ static ZEND_OPCODE_HANDLER_RET ZEND_FASTCALL ZEND_INCLUDE_OR_EVAL_SPEC_CONST_HAN
 
 					if (failure_retval) {
 						/* do nothing, file already included */
-					} else if (SUCCESS == zend_stream_open(ZSTR_VAL(resolved_path), &file_handle)) {
+					} else {
 
 						if (!file_handle.opened_path) {
 							file_handle.opened_path = zend_string_copy(resolved_path);
 						}
 
 						if (zend_hash_add_empty_element(&EG(included_files), file_handle.opened_path)) {
-							new_op_array = zend_compile_file(&file_handle, (opline->extended_value==ZEND_INCLUDE_ONCE?ZEND_INCLUDE:ZEND_REQUIRE));
-							zend_destroy_file_handle(&file_handle);
+							new_op_array = compile_filename((opline->extended_value==ZEND_INCLUDE_ONCE?ZEND_INCLUDE:ZEND_REQUIRE), inc_filename);
 						} else {
-							zend_file_handle_dtor(&file_handle);
 							failure_retval=1;
-						}
-					} else {
-						if (opline->extended_value == ZEND_INCLUDE_ONCE) {
-							zend_message_dispatcher(ZMSG_FAILED_INCLUDE_FOPEN, Z_STRVAL_P(inc_filename));
-						} else {
-							zend_message_dispatcher(ZMSG_FAILED_REQUIRE_FOPEN, Z_STRVAL_P(inc_filename));
 						}
 					}
 					zend_string_release(resolved_path);
@@ -29490,24 +29482,16 @@ static ZEND_OPCODE_HANDLER_RET ZEND_FASTCALL ZEND_INCLUDE_OR_EVAL_SPEC_CV_HANDLE
 
 					if (failure_retval) {
 						/* do nothing, file already included */
-					} else if (SUCCESS == zend_stream_open(ZSTR_VAL(resolved_path), &file_handle)) {
+					} else {
 
 						if (!file_handle.opened_path) {
 							file_handle.opened_path = zend_string_copy(resolved_path);
 						}
 
 						if (zend_hash_add_empty_element(&EG(included_files), file_handle.opened_path)) {
-							new_op_array = zend_compile_file(&file_handle, (opline->extended_value==ZEND_INCLUDE_ONCE?ZEND_INCLUDE:ZEND_REQUIRE));
-							zend_destroy_file_handle(&file_handle);
+							new_op_array = compile_filename((opline->extended_value==ZEND_INCLUDE_ONCE?ZEND_INCLUDE:ZEND_REQUIRE), inc_filename);
 						} else {
-							zend_file_handle_dtor(&file_handle);
 							failure_retval=1;
-						}
-					} else {
-						if (opline->extended_value == ZEND_INCLUDE_ONCE) {
-							zend_message_dispatcher(ZMSG_FAILED_INCLUDE_FOPEN, Z_STRVAL_P(inc_filename));
-						} else {
-							zend_message_dispatcher(ZMSG_FAILED_REQUIRE_FOPEN, Z_STRVAL_P(inc_filename));
 						}
 					}
 					zend_string_release(resolved_path);
@@ -41102,24 +41086,16 @@ static ZEND_OPCODE_HANDLER_RET ZEND_FASTCALL ZEND_INCLUDE_OR_EVAL_SPEC_TMPVAR_HA
 
 					if (failure_retval) {
 						/* do nothing, file already included */
-					} else if (SUCCESS == zend_stream_open(ZSTR_VAL(resolved_path), &file_handle)) {
+					} else {
 
 						if (!file_handle.opened_path) {
 							file_handle.opened_path = zend_string_copy(resolved_path);
 						}
 
 						if (zend_hash_add_empty_element(&EG(included_files), file_handle.opened_path)) {
-							new_op_array = zend_compile_file(&file_handle, (opline->extended_value==ZEND_INCLUDE_ONCE?ZEND_INCLUDE:ZEND_REQUIRE));
-							zend_destroy_file_handle(&file_handle);
+							new_op_array = compile_filename((opline->extended_value==ZEND_INCLUDE_ONCE?ZEND_INCLUDE:ZEND_REQUIRE), inc_filename);
 						} else {
-							zend_file_handle_dtor(&file_handle);
 							failure_retval=1;
-						}
-					} else {
-						if (opline->extended_value == ZEND_INCLUDE_ONCE) {
-							zend_message_dispatcher(ZMSG_FAILED_INCLUDE_FOPEN, Z_STRVAL_P(inc_filename));
-						} else {
-							zend_message_dispatcher(ZMSG_FAILED_REQUIRE_FOPEN, Z_STRVAL_P(inc_filename));
 						}
 					}
 					zend_string_release(resolved_path);
@@ -50387,4 +50363,3 @@ ZEND_API int zend_vm_call_opcode_handler(zend_execute_data* ex)
 #endif
 	return ret;
 }
-
