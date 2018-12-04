@@ -1606,6 +1606,10 @@ zend_op_array *file_cache_compile_file(zend_file_handle *file_handle, int type)
 		return accelerator_orig_compile_file(file_handle, type);
 	}
 
+	if (ZCG(accel_directives).file_cache_assume_real_paths) {
+		file_handle->opened_path = zend_string_init(file_handle->filename, strlen(file_handle->filename), 0);
+	}
+
 	if (!file_handle->opened_path) {
 		if (file_handle->type == ZEND_HANDLE_FILENAME &&
 		    accelerator_orig_zend_stream_open_function(file_handle->filename, file_handle) == FAILURE) {
@@ -1725,17 +1729,21 @@ zend_op_array *persistent_compile_file(zend_file_handle *file_handle, int type)
 			/* try to find cached script by full real path */
 			zend_accel_hash_entry *bucket;
 
-			/* open file to resolve the path */
-		    if (file_handle->type == ZEND_HANDLE_FILENAME &&
-        		accelerator_orig_zend_stream_open_function(file_handle->filename, file_handle) == FAILURE) {
-				if (type == ZEND_REQUIRE) {
-					zend_message_dispatcher(ZMSG_FAILED_REQUIRE_FOPEN, file_handle->filename);
-					zend_bailout();
-				} else {
-					zend_message_dispatcher(ZMSG_FAILED_INCLUDE_FOPEN, file_handle->filename);
+	        if (ZCG(accel_directives).file_cache_assume_real_paths) {
+				file_handle->opened_path = zend_string_init(file_handle->filename, strlen(file_handle->filename), 0);
+			} else {
+				/* open file to resolve the path */
+				if (file_handle->type == ZEND_HANDLE_FILENAME &&
+					accelerator_orig_zend_stream_open_function(file_handle->filename, file_handle) == FAILURE) {
+					if (type == ZEND_REQUIRE) {
+						zend_message_dispatcher(ZMSG_FAILED_REQUIRE_FOPEN, file_handle->filename);
+						zend_bailout();
+					} else {
+						zend_message_dispatcher(ZMSG_FAILED_INCLUDE_FOPEN, file_handle->filename);
+					}
+					return NULL;
 				}
-				return NULL;
-		    }
+			}
 
 			if (file_handle->opened_path) {
 				bucket = zend_accel_hash_find_entry(&ZCSG(hash), file_handle->opened_path);
@@ -1983,7 +1991,7 @@ static zend_string* persistent_zend_resolve_path(const char *filename, int filen
 			zend_string *resolved_path;
 			int key_length;
 			char *key = NULL;
-			
+
 			if (!ZCG(accel_directives).revalidate_path) {
 				/* lookup by "not-real" path */
 				key = accel_make_persistent_key(filename, filename_len, &key_length);
